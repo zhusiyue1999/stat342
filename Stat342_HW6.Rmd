@@ -1,0 +1,60 @@
+---
+title: "Stat342_HW6"
+output: html_document
+---
+
+```{r}
+library(rootSolve)
+#Wald Confidence Interval
+x=35
+n=55
+pi.hat=x/n
+se.pi.hat=sqrt( pi.hat*(1-pi.hat)/n )
+pi.hat + c(-1,1)*qnorm(p=.975)*se.pi.hat
+
+#Likelihood Confidence Interval
+likratio.binom <- function(pi,x,n) {
+  like_null <- dbinom(x=x,prob=pi,size=n)
+  like_alt <- dbinom(x=x,prob=x/n,size=n)
+  like_null/like_alt
+}
+df <- tibble(
+  pi=seq(0,1,0.01),
+  ratio=-2*log(likratio.binom(pi,x=35,n=55))
+)
+ggplot(data=df,mapping=aes(x=pi,y=ratio)) + geom_line() +
+  geom_hline(yintercept = qchisq(p=0.95,df=1),col="red")
+
+conf.int <- function(pi,x,nobs) {
+  q=qchisq(p=0.95,df=1)
+  -2*log(likratio.binom(pi,x,n)-q)
+}
+
+uniroot.all(f=conf.int,lower=0,upper=1,x=35,nobs=55)
+```
+
+```{r}
+#1.2 Revisited
+loglik.binom <- function(pi,x,nobs) {
+  dbinom(x=x,prob=pi,size=nobs,log=T)
+}
+
+ml <- maxLik2(loglik=loglik.binom,start=0.5,x=35,nobs=55)
+plot(ml)
+coef(ml)
+logLik(ml)
+
+loglik.binom.odds <- function(theta,x,nobs) {
+  dbinom(x=x,prob=theta/(1+theta),size=nobs,log=T)
+}
+
+ml.odds <- maxLik2(loglik=loglik.binom.odds,start=1,x=35,nobs=55)
+plot(ml.odds)
+```
+
+
+
+
+
+
+

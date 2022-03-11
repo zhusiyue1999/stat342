@@ -1,0 +1,143 @@
+---
+title: "Stats342_HW2"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(infer)
+library(mosaic)
+
+data(gss)
+gss_summary <- gss %>% group_by(year) %>% summarise(xbar=mean(hours), s=sd(hours))
+ggplot(data=gss_summary,mapping=aes(x=year,y=xbar)) +geom_line()
+
+
+gss2018 <- gss %>% filter(year==2018)
+ggplot(data=gss2018,mapping=aes(x=hours)) + geom_density() +geom_rug()
+
+gss2018 %>% infer::t_test(response=hours,mu=40)
+```
+
+
+```{r}
+library(fastR2)
+
+#Normal
+CIsim(n=c(5,10,25), samples=100, rdist=rnorm, args=list(mean=500, sd=100), method="t.test", estimand=500)
+
+df <- tibble(x=seq(0,5,0.01),y=dexp(x,rate=1/10))
+ggplot(data=df,mapping=aes(x=x,y=y)) +geom_line()
+CIsim(n=c(5,10,30),samples=2000,rdist=rexp,args=list(rate=1/10),method="t.test",estimand=10)
+CIsim(n=c(5,10,30),samples=2000,rdist=runif,args=list(min=-1,max=1),method="t.test",estimand=0)
+
+```
+
+
+```{r}
+library(fastR2)
+library(tidyverse)
+head(HeliumFootballs)
+
+footballs <- HeliumFootballs %>% pivot_longer(col=2:3,names_to="type",values_to="distance")
+ggplot(data=footballs,mapping=aes(x=type,y=distance)) + 
+  geom_boxplot(mapping=aes(fill=type)) + 
+  geom_point() + 
+  geom_line(mapping=aes(group=trial),size=0.4,col="grey")
+
+HeliumFootballs %>% summarize(cor(air, helium))
+
+HeliumFootballs <- HeliumFootballs %>% mutate(diff=air-helium)
+t.test(~diff, data=HeliumFootballs, mu=0, alternative="two.sided")
+```
+
+
+
+```{r}
+weights <- read_csv("brain_weights.csv") %>% mutate(bigger=treatment > control)
+mosaic::binom.test(~bigger,alternative="greater",p=0.5,data=weights)
+```
+
+
+```{r}
+library(openintro)
+#sum <- ncbirths %>% group_by(habit) %>% summarize(n=n(), xbar=mean(weight), s2=var(weight) )
+ncbirths_data <- data(ncbirths)
+mosaic::t.test(weight~habit,data=ncbirths, var.equal=T)
+mosaic::t.test(weight~habit,data=ncbirths_data)
+
+```
+
+
+```{r}
+library(fastR2)
+library(dplyr)
+
+iris <- iris %>% mutate(ratio=Sepal.Length/Sepal.Width)
+
+levels(iris$Species)[1]
+confint(t.test(~ratio, data=filter(iris,Species==levels(iris$Species)[1])))
+levels(iris$Species)[2]
+confint(t.test(~ratio, data=filter(iris,Species==levels(iris$Species)[2])))
+levels(iris$Species)[3]
+confint(t.test(~ratio, data=filter(iris,Species==levels(iris$Species)[3])))
+```
+
+
+
+
+
+```{r}
+endurance <- read_csv("Endurance.csv") %>% 
+  select(-Order) %>% 
+  pivot_wider(names_from=Treatment,values_from=Endurance) %>%
+  mutate(diff=Vitamin-Placebo)
+t.test(~diff, data=endurance, mu=0, alternative="two.sided")
+
+endurance <- endurance %>% mutate(diff_log=log(Vitamin)-log(Placebo))
+t.test(~diff_log, data=endurance, mu=0, alternative="two.sided")
+
+endurance <- endurance %>% mutate(diff_quotient=Vitamin/Placebo)
+t.test(~diff_quotient, data=endurance, mu=1, alternative="two.sided")
+
+endurance <- endurance %>% mutate(diff_reciprocal=1/Vitamin-1/Placebo)
+t.test(~diff_reciprocal, data=endurance, mu=0, alternative="two.sided")
+
+endurance <- endurance %>% mutate(bigger=Vitamin > Placebo)
+mosaic::binom.test(~bigger,alternative="two.sided",p=0.5,data=endurance)
+
+```
+
+
+```{r}
+library(fastR2)
+pet <- PetStress
+ggplot(data=PetStress,mapping=aes(x=group,y=rate)) + 
+  geom_boxplot(mapping=aes(fill=group)) + 
+  geom_point()
+
+pet %>% group_by(group) %>% summarize(n=n(), xbar=mean(rate), s2=var(rate), sd=sqrt(s2))
+pet_PF <- pet %>% filter(group!="C")
+pet_CF <- pet %>% filter(group!="P")
+pet_CP <- pet %>% filter(group!="F")
+
+mosaic::t.test(rate~group,data=pet_PF,conf.level=0.85)
+mosaic::t.test(rate~group,data=pet_CF,conf.level=0.85)
+mosaic::t.test(rate~group,data=pet_CP,conf.level=0.85)
+
+```
+
+
+```{r}
+expci <- function(x, conf.level=0.95){ 
+n=length(x)
+xbar=mean(x)
+alpha=1-conf.level
+q1=qgamma(alpha/2,n,1)
+q2=qgamma(1-alpha/2,n,1)
+interval=c(s/q2,s/q1)
+return(list(conf.int=interval, estimate=s/n)) }
+
+CIsim(n=5,samples=5000,rdist=rexp, args=list(rate=1/10),estimand=10, method=expci)
+
+```

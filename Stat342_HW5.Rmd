@@ -1,0 +1,50 @@
+---
+title: "Stat342_HW5"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+x <- rep(0:4,times=c(3,3,2,1,1))
+loglik.pois <- function(theta,x) {
+  sum(dpois(x,lambda=theta,log=T))
+}
+
+w <- -2*(loglik.pois(1,x=x) - loglik.pois(mean(x),x=x))
+pval=1-pchisq(w,df=1)
+
+library(fastR2)
+ml.pois <- maxLik2(loglik=loglik.pois,start=1,x=x)
+plot(ml.pois)
+```
+```{r}
+loglik.binom <- function(theta,x,n) {
+  dbinom(x,size=n,prob=theta,log=T)
+}
+
+w <- -2*(loglik.binom(0.5,60,100) - loglik.binom(0.6,60,100))
+pval=1-pchisq(w,df=1)
+
+binom.test(x=60,n=100,p=0.5,alternative="two.sided")
+
+ml.binom <- maxLik2(loglik=loglik.binom,start=0.5,x=60,n=100)
+plot(ml.binom)
+
+```
+
+```{r}
+#3b
+x<-c(0.64,0.92,0.73,0.96,0.98,0.33,0.80,0.96,0.81,0.76,0.98,0.75,
+    0.87,0.82,0.44,0.96,0.61,0.32,0.67,0.98,0.96,0.88,0.85,1.00,0.86,0.88,0.80,0.83,0.64,0.5)
+n <- length(x)
+
+lambda <- 1/(((-1-n/sum(log(x)))+1)^n*((prod(x))^(-1-n/sum(log(x)))))
+lambda
+```
+
+
+```{r}
+#3c
+1-pchisq(q=-2*log(lambda),df=1)
+```

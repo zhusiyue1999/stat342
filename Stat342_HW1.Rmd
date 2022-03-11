@@ -1,0 +1,50 @@
+---
+title: "STAT342_HW1"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+chesq_data <- tibble(n = seq(1,50,1), prob = 1-pchisq(q = 5.009, df = n))
+ggplot(data = chesq_data, mapping = aes(x=n,y=prob)) + geom_line() + geom_hline(yintercept=0.975)
+uniroot(f=function(x){1-pchisq(q=5.009,df=x) - 0.975}, lower=1, upper=20)
+```
+```{r}
+uniroot(f=function(n){qchisq(p=0.05,df=n-1)/qchisq(p=0.95,df=n-1)-51.47/261.9}, lower=2,upper=25)
+df<-tibble(n=seq(1,50,1), result=qchisq(p=0.05,df=n-1)/qchisq(p=0.95,df=n-1))
+ggplot(data=df, mapping=aes(x=n,y=result)) + geom_line() + geom_hline(yintercept=51.47/261.9) + 
+  ggtitle("The Objevtive Function for a 90% Confidence Interval")
+```
+
+```{r}
+library(fastR2)
+x <- c(3,4,5,8)
+v1 <- 0.5*c(1,1,1,1)
+v2 <- 0.5*c(1,1,-1,-1)
+v3 <- 0.5*c(1,-1,-1,1)
+v4 <- 0.5*c(1,-1,1,-1)
+v_1<-(x%*%v1)*v1
+v_2<-(x%*%v2)*v2
+v_3<-(x%*%v3)*v3
+v_4<-(x%*%v4)*v4
+v_1+v_2+v_3+v_4
+
+```
+
+```{r}
+library(tidyverse)
+#read csv file
+systolic<-read_csv(file="systolic.csv")
+#rename variable called observer 1 as observer1
+systolic <- systolic %>% rename(observer1 = "observer 1")
+#calculate the difference 
+systolic <- systolic %>% mutate(diff=observer1-observer2)
+
+diff_mean <- mean(systolic$diff)
+S2 <- sum((systolic$diff-diff_mean)^2)/(10-1)
+X2 <- 9*S2/35^2
+
+print(diff_mean)
+print(S2)
+print(X2)
+```

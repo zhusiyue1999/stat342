@@ -1,0 +1,54 @@
+---
+title: "Stat342_HW3"
+output: html_document
+---
+```{r}
+library(openintro)
+library(tidyverse)
+library(mosaic)
+```
+
+
+```{r}
+#1
+mosaic::binom.test(x=23+15+6+8,n=13+18+23+15+6+8,ci.method="Wald",alternative="two.sided")
+mosaic::binom.test(x=23+15+6+8,n=13+18+23+15+6+8,ci.method="Score",alternative="two.sided")
+mosaic::binom.test(x=23+15+6+8,n=13+18+23+15+6+8,ci.method="Plus4",alternative="two.sided")
+
+mosaic::prop.test(x=23+15+6+8,n=13+18+23+15+6+8,correct=F,alternative="two.sided")
+mosaic::prop.test(x=23+15+6+8,n=13+18+23+15+6+8,alternative="two.sided")
+
+```
+
+```{r}
+#2
+pnorm(log(2),-0.25,0.996)
+
+mosaic::binom.test(x=95,n=150,p=0.828,alternative="less")
+```
+
+```{r}
+#4
+library(dplyr)
+data <- read.csv("gss16.csv")
+data <- data %>% filter(wrkstat=="Working fulltime" | wrkstat=="Working parttime") %>% 
+  mutate(snp_insta=case_when(snapchat=="Yes" | instagrm=="Yes" ~ "Yes",
+                             snapchat=="No" & instagrm=="No" ~ "No"))
+mosaic::binom.test(x=nrow(filter(data,snp_insta=="Yes")),n=nrow(filter(data,snp_insta=="Yes")) + 
+                     nrow(filter(data,snp_insta=="No")),ci.method="Plus4")
+```
+
+```{r}
+
+```
+
+```{r}
+#Ex2.2
+Plus4Sims <- CIsim(n=10,sample=2000,rdist=rbinom,args=list(size=1,prob=0.2),method="binom.test",
+      method.args=list(ci.method="Plus4"),estimand=0.2)
+Plus4Sims <- Plus4Sims %>% summarize(mean(upper-lower))
+
+WaldSims <- CIsim(n=10,sample=2000,rdist=rbinom,args=list(size=1,prob=0.2),method="binom.test",
+      method.args=list(ci.method="Wald"),estimand=0.2)
+WaldSims <- WaldSims %>% summarize(mean(upper-lower))
+```
